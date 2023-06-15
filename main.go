@@ -24,12 +24,17 @@ func main() {
 	}
 
 	var databaseName = "jjl-test"
-	var containerName = "customer"
+	var containerName = "manifests"
+	var partitionKey = "/customerId"
+
+	// var databaseName = "ec-provisioner"
+	// var containerName = "manifests"
 	// var partitionKey = "/customerId"
 
 	item := struct {
-		ID         string `json:"id"`
-		CustomerId string `json:"customerId"`
+		ID           string `json:"id"`
+		CustomerName string `json:"customer_name"`
+		// CustomerId   string `json:"customerId"`
 		// Title        string
 		// FirstName    string
 		// LastName     string
@@ -37,8 +42,9 @@ func main() {
 		// PhoneNumber  string
 		// CreationDate string
 	}{
-		ID:         "3",
-		CustomerId: "1",
+		ID:           "7fd55dcf-ef05-4c99-9b6d-040fd666f018",
+		CustomerName: "AOCP Demo",
+		// CustomerId: "1",
 		// Title:        "Mr",
 		// FirstName:    "Luke",
 		// LastName:     "Hayes",
@@ -62,20 +68,20 @@ func main() {
 	// 	log.Printf("createDatabase failed: %s\n", err)
 	// }
 
-	// err = createContainer(client, databaseName, containerName, partitionKey)
-	// if err != nil {
-	// 	log.Printf("createContainer failed: %s\n", err)
-	// }
-
-	// err = createItem(client, databaseName, containerName, item.CustomerId, item)
-	// if err != nil {
-	// 	log.Printf("createItem failed: %s\n", err)
-	// }
-
-	err = readItem(client, databaseName, containerName, item.CustomerId, item.ID)
+	err = createContainer(client, databaseName, containerName, partitionKey)
 	if err != nil {
-		log.Printf("readItem failed: %s\n", err)
+		log.Printf("createContainer failed: %s\n", err)
 	}
+
+	err = createItem(client, databaseName, containerName, item.CustomerName, item)
+	if err != nil {
+		log.Printf("createItem failed: %s\n", err)
+	}
+
+	// err = readItem(client, databaseName, containerName, item.CustomerName, item.ID)
+	// if err != nil {
+	// 	log.Printf("readItem failed: %s\n", err)
+	// }
 
 	// err = deleteItem(client, databaseName, containerName, item.CustomerId, item.ID)
 	// if err != nil {
