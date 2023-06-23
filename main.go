@@ -21,6 +21,10 @@ var (
 func main() {
 
 	checkEnvVars([]string{"AZURE_COSMOS_ENDPOINT", "AZURE_COSMOS_KEY"})
+	// createClient(
+	// 	os.Getenv("AZURE_COSMOS_ENDPOINT"),
+	// 	os.Getenv("AZURE_COSMOS_KEY"),
+	// )
 
 	switch cmd := kingpin.MustParse(app.Parse(os.Args[1:])); cmd {
 	case getManifestCmd.FullCommand():
@@ -42,6 +46,21 @@ func checkEnvVars(varNames []string) {
 		fmt.Printf("Please set the following environment variables:\n%s\n", strings.Join(missingVars, ", "))
 		os.Exit(1)
 	}
+}
+
+func createClient(endpoint string, key string) *azcosmos.Client {
+	cred, err := azcosmos.NewKeyCredential(key)
+	if err != nil {
+		log.Fatalf("Failed to create a credential: %v", err)
+	}
+
+	// Create a CosmosDB client
+	client, err := azcosmos.NewClientWithKey(endpoint, cred, nil)
+	if err != nil {
+		log.Fatalf("Failed to create Azure Cosmos DB client: %v", err)
+	}
+
+	return client
 }
 
 // ---
@@ -171,7 +190,7 @@ func createItem(client *azcosmos.Client, databaseName, containerName, partitionK
 	return nil
 }
 
-func readItem(client *azcosmos.Client, databaseName, containerName, partitionKey, itemId string) error {
+func readItem(client *azcosmos.Client, databaseName string, containerName string, partitionKey string, itemId string) error {
 	//	databaseName = "adventureworks"
 	//	containerName = "customer"
 	//	partitionKey = "1"
@@ -221,6 +240,36 @@ func readItem(client *azcosmos.Client, databaseName, containerName, partitionKey
 	return nil
 }
 
+func createDatabaseContainerItem() {
+	client := createClient(
+		os.Getenv("AZURE_COSMOS_ENDPOINT"),
+		os.Getenv("AZURE_COSMOS_KEY"),
+	)
+
+	item := struct {
+		ID         string `json:"id"`
+		CustomerId string `json:"customerId"`
+	}{
+		ID:         "1",
+		CustomerId: "1",
+	}
+
+	err := createDatabase(client, *database)
+	if err != nil {
+		log.Printf("createDatabase failed: %s\n", err)
+	}
+
+	err = createContainer(client, *database, *container, *partitionKey)
+	if err != nil {
+		log.Printf("createContainer failed: %s\n", err)
+	}
+
+	err = createItem(client, *database, *container, item.CustomerId, item)
+	if err != nil {
+		log.Printf("createItem failed: %s\n", err)
+	}
+}
+
 func deleteItem(client *azcosmos.Client, databaseName, containerName, partitionKey, itemId string) error {
 	//	databaseName = "adventureworks"
 	//	containerName = "customer"
@@ -247,3 +296,30 @@ func deleteItem(client *azcosmos.Client, databaseName, containerName, partitionK
 
 	return nil
 }
+
+// func deleteItem(client *azcosmos.Client, databaseName, containerName, partitionKey, itemId string) error {
+// 	//	databaseName = "adventureworks"
+// 	//	containerName = "customer"
+// 	//	partitionKey = "1"
+// 	//	itemId = "1"
+
+// 	// Create container client
+// 	containerClient, err := client.NewContainer(databaseName, containerName)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to create a container client:: %s", err)
+// 	}
+// 	// Specifies the value of the partiton key
+// 	pk := azcosmos.NewPartitionKeyString(partitionKey)
+
+// 	// Delete an item
+// 	ctx := context.TODO()
+
+// 	res, err := containerClient.DeleteItem(ctx, pk, itemId, nil)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	log.Printf("Status %d. Item %v deleted. ActivityId %s. Consuming %v Request Units.\n", res.RawResponse.StatusCode, pk, res.ActivityID, res.RequestCharge)
+
+// 	return nil
+// }
