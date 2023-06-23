@@ -1,293 +1,294 @@
 package main
 
 import (
-	"context"
-	"encoding/json"
-	"errors"
-	"fmt"
-	"log"
 	"os"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
-	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
+	"gopkg.in/alecthomas/kingpin.v2"
+)
+
+var (
+	app = kingpin.New("ec", "enterprise cloud CLI")
 )
 
 func main() {
-	endpoint := os.Getenv("AZURE_COSMOS_ENDPOINT")
-	if endpoint == "" {
-		log.Fatal("AZURE_COSMOS_ENDPOINT could not be found")
+	switch cmd := kingpin.MustParse(app.Parse(os.Args[1:])); cmd {
+	case getManifestCmd.FullCommand():
+		handleGetCommand(cmd)
+	case getManifestsCmd.FullCommand():
+		handleGetCommand(cmd)
 	}
-
-	key := os.Getenv("AZURE_COSMOS_KEY")
-	if key == "" {
-		log.Fatal("AZURE_COSMOS_KEY could not be found")
-	}
-
-	var databaseName = "jjl-test"
-	var containerName = "manifests"
-	var partitionKey = "/customerId"
-
-	// var databaseName = "ec-provisioner"
-	// var containerName = "manifests"
-	// var partitionKey = "/customerId"
-
-	item := struct {
-		ID           string `json:"id"`
-		CustomerName string `json:"customer_name"`
-		// CustomerId   string `json:"customerId"`
-		// Title        string
-		// FirstName    string
-		// LastName     string
-		// EmailAddress string
-		// PhoneNumber  string
-		// CreationDate string
-	}{
-		ID:           "7fd55dcf-ef05-4c99-9b6d-040fd666f018",
-		CustomerName: "AOCP Demo",
-		// CustomerId: "1",
-		// Title:        "Mr",
-		// FirstName:    "Luke",
-		// LastName:     "Hayes",
-		// EmailAddress: "luke12@adventure-works.com",
-		// PhoneNumber:  "879-555-0197",
-	}
-
-	cred, err := azcosmos.NewKeyCredential(key)
-	if err != nil {
-		log.Fatal("Failed to create a credential: ", err)
-	}
-
-	// Create a CosmosDB client
-	client, err := azcosmos.NewClientWithKey(endpoint, cred, nil)
-	if err != nil {
-		log.Fatal("Failed to create Azure Cosmos DB db client: ", err)
-	}
-
-	// err = createDatabase(client, databaseName)
-	// if err != nil {
-	// 	log.Printf("createDatabase failed: %s\n", err)
-	// }
-
-	err = createContainer(client, databaseName, containerName, partitionKey)
-	if err != nil {
-		log.Printf("createContainer failed: %s\n", err)
-	}
-
-	err = createItem(client, databaseName, containerName, item.CustomerName, item)
-	if err != nil {
-		log.Printf("createItem failed: %s\n", err)
-	}
-
-	// err = readItem(client, databaseName, containerName, item.CustomerName, item.ID)
-	// if err != nil {
-	// 	log.Printf("readItem failed: %s\n", err)
-	// }
-
-	// err = deleteItem(client, databaseName, containerName, item.CustomerId, item.ID)
-	// if err != nil {
-	// 	log.Printf("deleteItem failed: %s\n", err)
-	// }
 }
 
-func createDatabase(client *azcosmos.Client, databaseName string) error {
-	//	databaseName := "adventureworks"
+// func main() {
+// 	endpoint := os.Getenv("AZURE_COSMOS_ENDPOINT")
+// 	if endpoint == "" {
+// 		log.Fatal("AZURE_COSMOS_ENDPOINT could not be found")
+// 	}
 
-	databaseProperties := azcosmos.DatabaseProperties{ID: databaseName}
+// 	key := os.Getenv("AZURE_COSMOS_KEY")
+// 	if key == "" {
+// 		log.Fatal("AZURE_COSMOS_KEY could not be found")
+// 	}
 
-	// This is a helper function that swallows 409 errors
-	errorIs409 := func(err error) bool {
-		var responseErr *azcore.ResponseError
-		return err != nil && errors.As(err, &responseErr) && responseErr.StatusCode == 409
-	}
-	ctx := context.TODO()
-	databaseResp, err := client.CreateDatabase(ctx, databaseProperties, nil)
+// 	var databaseName = "jjl-test"
+// 	var containerName = "customer"
+// 	// var partitionKey = "/customerId"
 
-	switch {
-	case errorIs409(err):
-		log.Printf("Database [%s] already exists\n", databaseName)
-	case err != nil:
-		return err
-	default:
-		log.Printf("Database [%v] created. ActivityId %s\n", databaseName, databaseResp.ActivityID)
-	}
-	return nil
-}
+// 	item := struct {
+// 		ID         string `json:"id"`
+// 		CustomerId string `json:"customerId"`
+// 		// Title        string
+// 		// FirstName    string
+// 		// LastName     string
+// 		// EmailAddress string
+// 		// PhoneNumber  string
+// 		// CreationDate string
+// 	}{
+// 		ID:         "3",
+// 		CustomerId: "1",
+// 		// Title:        "Mr",
+// 		// FirstName:    "Luke",
+// 		// LastName:     "Hayes",
+// 		// EmailAddress: "luke12@adventure-works.com",
+// 		// PhoneNumber:  "879-555-0197",
+// 	}
 
-func createContainer(client *azcosmos.Client, databaseName, containerName, partitionKey string) error {
-	// databaseName = adventureworks
-	// containerName = customer
-	// partitionKey = "/customerId"
+// 	cred, err := azcosmos.NewKeyCredential(key)
+// 	if err != nil {
+// 		log.Fatal("Failed to create a credential: ", err)
+// 	}
 
-	databaseClient, err := client.NewDatabase(databaseName)
-	if err != nil {
-		return err
-	}
+// 	// Create a CosmosDB client
+// 	client, err := azcosmos.NewClientWithKey(endpoint, cred, nil)
+// 	if err != nil {
+// 		log.Fatal("Failed to create Azure Cosmos DB db client: ", err)
+// 	}
 
-	// Creating a container
-	containerProperties := azcosmos.ContainerProperties{
-		ID: containerName,
-		PartitionKeyDefinition: azcosmos.PartitionKeyDefinition{
-			Paths: []string{partitionKey},
-		},
-	}
+// 	// err = createDatabase(client, databaseName)
+// 	// if err != nil {
+// 	// 	log.Printf("createDatabase failed: %s\n", err)
+// 	// }
 
-	// This is a helper function that swallows 409 errors
-	errorIs409 := func(err error) bool {
-		var responseErr *azcore.ResponseError
-		return err != nil && errors.As(err, &responseErr) && responseErr.StatusCode == 409
-	}
+// 	// err = createContainer(client, databaseName, containerName, partitionKey)
+// 	// if err != nil {
+// 	// 	log.Printf("createContainer failed: %s\n", err)
+// 	// }
 
-	ctx := context.TODO()
-	containerResponse, err := databaseClient.CreateContainer(ctx, containerProperties, nil)
+// 	// err = createItem(client, databaseName, containerName, item.CustomerId, item)
+// 	// if err != nil {
+// 	// 	log.Printf("createItem failed: %s\n", err)
+// 	// }
 
-	switch {
-	case errorIs409(err):
-		log.Printf("Container [%s] already exists\n", containerName)
-	case err != nil:
-		return err
-	default:
-		log.Printf("Container [%s] created. ActivityId %s\n", containerName, containerResponse.ActivityID)
-	}
-	return nil
-}
+// 	err = readItem(client, databaseName, containerName, item.CustomerId, item.ID)
+// 	if err != nil {
+// 		log.Printf("readItem failed: %s\n", err)
+// 	}
 
-func createItem(client *azcosmos.Client, databaseName, containerName, partitionKey string, item any) error {
-	//	databaseName = "adventureworks"
-	//	containerName = "customer"
-	//	partitionKey = "1"
+// 	// err = deleteItem(client, databaseName, containerName, item.CustomerId, item.ID)
+// 	// if err != nil {
+// 	// 	log.Printf("deleteItem failed: %s\n", err)
+// 	// }
+// }
 
-	/*	item = struct {
-			ID           string `json:"id"`
-			CustomerId   string `json:"customerId"`
-			Title        string
-			FirstName    string
-			LastName     string
-			EmailAddress string
-			PhoneNumber  string
-			CreationDate string
-		}{
-			ID:           "1",
-			CustomerId:   "1",
-			Title:        "Mr",
-			FirstName:    "Luke",
-			LastName:     "Hayes",
-			EmailAddress: "luke12@adventure-works.com",
-			PhoneNumber:  "879-555-0197",
-			CreationDate: "2014-02-25T00:00:00",
-		}
-	*/
-	// create container client
-	containerClient, err := client.NewContainer(databaseName, containerName)
-	if err != nil {
-		return fmt.Errorf("failed to create a container client: %s", err)
-	}
+// func createDatabase(client *azcosmos.Client, databaseName string) error {
+// 	//	databaseName := "adventureworks"
 
-	// specifies the value of the partiton key
-	pk := azcosmos.NewPartitionKeyString(partitionKey)
+// 	databaseProperties := azcosmos.DatabaseProperties{ID: databaseName}
 
-	b, err := json.Marshal(item)
-	if err != nil {
-		return err
-	}
-	// setting the item options upon creating ie. consistency level
-	itemOptions := azcosmos.ItemOptions{
-		ConsistencyLevel: azcosmos.ConsistencyLevelSession.ToPtr(),
-	}
+// 	// This is a helper function that swallows 409 errors
+// 	errorIs409 := func(err error) bool {
+// 		var responseErr *azcore.ResponseError
+// 		return err != nil && errors.As(err, &responseErr) && responseErr.StatusCode == 409
+// 	}
+// 	ctx := context.TODO()
+// 	databaseResp, err := client.CreateDatabase(ctx, databaseProperties, nil)
 
-	// this is a helper function that swallows 409 errors
-	errorIs409 := func(err error) bool {
-		var responseErr *azcore.ResponseError
-		return err != nil && errors.As(err, &responseErr) && responseErr.StatusCode == 409
-	}
+// 	switch {
+// 	case errorIs409(err):
+// 		log.Printf("Database [%s] already exists\n", databaseName)
+// 	case err != nil:
+// 		return err
+// 	default:
+// 		log.Printf("Database [%v] created. ActivityId %s\n", databaseName, databaseResp.ActivityID)
+// 	}
+// 	return nil
+// }
 
-	ctx := context.TODO()
-	itemResponse, err := containerClient.CreateItem(ctx, pk, b, &itemOptions)
+// func createContainer(client *azcosmos.Client, databaseName, containerName, partitionKey string) error {
+// 	// databaseName = adventureworks
+// 	// containerName = customer
+// 	// partitionKey = "/customerId"
 
-	switch {
-	case errorIs409(err):
-		log.Printf("Item with partitionkey value %s already exists\n", pk)
-	case err != nil:
-		return err
-	default:
-		log.Printf("Status %d. Item %v created. ActivityId %s. Consuming %v Request Units.\n", itemResponse.RawResponse.StatusCode, pk, itemResponse.ActivityID, itemResponse.RequestCharge)
-	}
+// 	databaseClient, err := client.NewDatabase(databaseName)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	return nil
-}
+// 	// Creating a container
+// 	containerProperties := azcosmos.ContainerProperties{
+// 		ID: containerName,
+// 		PartitionKeyDefinition: azcosmos.PartitionKeyDefinition{
+// 			Paths: []string{partitionKey},
+// 		},
+// 	}
 
-func readItem(client *azcosmos.Client, databaseName, containerName, partitionKey, itemId string) error {
-	//	databaseName = "adventureworks"
-	//	containerName = "customer"
-	//	partitionKey = "1"
-	//	itemId = "1"
+// 	// This is a helper function that swallows 409 errors
+// 	errorIs409 := func(err error) bool {
+// 		var responseErr *azcore.ResponseError
+// 		return err != nil && errors.As(err, &responseErr) && responseErr.StatusCode == 409
+// 	}
 
-	// Create container client
-	containerClient, err := client.NewContainer(databaseName, containerName)
-	if err != nil {
-		return fmt.Errorf("failed to create a container client: %s", err)
-	}
+// 	ctx := context.TODO()
+// 	containerResponse, err := databaseClient.CreateContainer(ctx, containerProperties, nil)
 
-	// Specifies the value of the partiton key
-	pk := azcosmos.NewPartitionKeyString(partitionKey)
+// 	switch {
+// 	case errorIs409(err):
+// 		log.Printf("Container [%s] already exists\n", containerName)
+// 	case err != nil:
+// 		return err
+// 	default:
+// 		log.Printf("Container [%s] created. ActivityId %s\n", containerName, containerResponse.ActivityID)
+// 	}
+// 	return nil
+// }
 
-	// Read an item
-	ctx := context.TODO()
-	itemResponse, err := containerClient.ReadItem(ctx, pk, itemId, nil)
-	if err != nil {
-		return err
-	}
+// func createItem(client *azcosmos.Client, databaseName, containerName, partitionKey string, item any) error {
+// 	//	databaseName = "adventureworks"
+// 	//	containerName = "customer"
+// 	//	partitionKey = "1"
 
-	itemResponseBody := struct {
-		ID           string `json:"id"`
-		CustomerId   string `json:"customerId"`
-		Title        string
-		FirstName    string
-		LastName     string
-		EmailAddress string
-		PhoneNumber  string
-		CreationDate string
-	}{}
+// 	/*	item = struct {
+// 			ID           string `json:"id"`
+// 			CustomerId   string `json:"customerId"`
+// 			Title        string
+// 			FirstName    string
+// 			LastName     string
+// 			EmailAddress string
+// 			PhoneNumber  string
+// 			CreationDate string
+// 		}{
+// 			ID:           "1",
+// 			CustomerId:   "1",
+// 			Title:        "Mr",
+// 			FirstName:    "Luke",
+// 			LastName:     "Hayes",
+// 			EmailAddress: "luke12@adventure-works.com",
+// 			PhoneNumber:  "879-555-0197",
+// 			CreationDate: "2014-02-25T00:00:00",
+// 		}
+// 	*/
+// 	// create container client
+// 	containerClient, err := client.NewContainer(databaseName, containerName)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to create a container client: %s", err)
+// 	}
 
-	err = json.Unmarshal(itemResponse.Value, &itemResponseBody)
-	if err != nil {
-		return err
-	}
+// 	// specifies the value of the partiton key
+// 	pk := azcosmos.NewPartitionKeyString(partitionKey)
 
-	b, err := json.MarshalIndent(itemResponseBody, "", "    ")
-	if err != nil {
-		return err
-	}
-	fmt.Printf("Read item with customerId %s\n", itemResponseBody.CustomerId)
-	fmt.Printf("%s\n", b)
+// 	b, err := json.Marshal(item)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	// setting the item options upon creating ie. consistency level
+// 	itemOptions := azcosmos.ItemOptions{
+// 		ConsistencyLevel: azcosmos.ConsistencyLevelSession.ToPtr(),
+// 	}
 
-	log.Printf("Status %d. Item %v read. ActivityId %s. Consuming %v Request Units.\n", itemResponse.RawResponse.StatusCode, pk, itemResponse.ActivityID, itemResponse.RequestCharge)
+// 	// this is a helper function that swallows 409 errors
+// 	errorIs409 := func(err error) bool {
+// 		var responseErr *azcore.ResponseError
+// 		return err != nil && errors.As(err, &responseErr) && responseErr.StatusCode == 409
+// 	}
 
-	return nil
-}
+// 	ctx := context.TODO()
+// 	itemResponse, err := containerClient.CreateItem(ctx, pk, b, &itemOptions)
 
-func deleteItem(client *azcosmos.Client, databaseName, containerName, partitionKey, itemId string) error {
-	//	databaseName = "adventureworks"
-	//	containerName = "customer"
-	//	partitionKey = "1"
-	//	itemId = "1"
+// 	switch {
+// 	case errorIs409(err):
+// 		log.Printf("Item with partitionkey value %s already exists\n", pk)
+// 	case err != nil:
+// 		return err
+// 	default:
+// 		log.Printf("Status %d. Item %v created. ActivityId %s. Consuming %v Request Units.\n", itemResponse.RawResponse.StatusCode, pk, itemResponse.ActivityID, itemResponse.RequestCharge)
+// 	}
 
-	// Create container client
-	containerClient, err := client.NewContainer(databaseName, containerName)
-	if err != nil {
-		return fmt.Errorf("failed to create a container client:: %s", err)
-	}
-	// Specifies the value of the partiton key
-	pk := azcosmos.NewPartitionKeyString(partitionKey)
+// 	return nil
+// }
 
-	// Delete an item
-	ctx := context.TODO()
+// func readItem(client *azcosmos.Client, databaseName, containerName, partitionKey, itemId string) error {
+// 	//	databaseName = "adventureworks"
+// 	//	containerName = "customer"
+// 	//	partitionKey = "1"
+// 	//	itemId = "1"
 
-	res, err := containerClient.DeleteItem(ctx, pk, itemId, nil)
-	if err != nil {
-		return err
-	}
+// 	// Create container client
+// 	containerClient, err := client.NewContainer(databaseName, containerName)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to create a container client: %s", err)
+// 	}
 
-	log.Printf("Status %d. Item %v deleted. ActivityId %s. Consuming %v Request Units.\n", res.RawResponse.StatusCode, pk, res.ActivityID, res.RequestCharge)
+// 	// Specifies the value of the partiton key
+// 	pk := azcosmos.NewPartitionKeyString(partitionKey)
 
-	return nil
-}
+// 	// Read an item
+// 	ctx := context.TODO()
+// 	itemResponse, err := containerClient.ReadItem(ctx, pk, itemId, nil)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	itemResponseBody := struct {
+// 		ID           string `json:"id"`
+// 		CustomerId   string `json:"customerId"`
+// 		Title        string
+// 		FirstName    string
+// 		LastName     string
+// 		EmailAddress string
+// 		PhoneNumber  string
+// 		CreationDate string
+// 	}{}
+
+// 	err = json.Unmarshal(itemResponse.Value, &itemResponseBody)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	b, err := json.MarshalIndent(itemResponseBody, "", "    ")
+// 	if err != nil {
+// 		return err
+// 	}
+// 	fmt.Printf("Read item with customerId %s\n", itemResponseBody.CustomerId)
+// 	fmt.Printf("%s\n", b)
+
+// 	log.Printf("Status %d. Item %v read. ActivityId %s. Consuming %v Request Units.\n", itemResponse.RawResponse.StatusCode, pk, itemResponse.ActivityID, itemResponse.RequestCharge)
+
+// 	return nil
+// }
+
+// func deleteItem(client *azcosmos.Client, databaseName, containerName, partitionKey, itemId string) error {
+// 	//	databaseName = "adventureworks"
+// 	//	containerName = "customer"
+// 	//	partitionKey = "1"
+// 	//	itemId = "1"
+
+// 	// Create container client
+// 	containerClient, err := client.NewContainer(databaseName, containerName)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to create a container client:: %s", err)
+// 	}
+// 	// Specifies the value of the partiton key
+// 	pk := azcosmos.NewPartitionKeyString(partitionKey)
+
+// 	// Delete an item
+// 	ctx := context.TODO()
+
+// 	res, err := containerClient.DeleteItem(ctx, pk, itemId, nil)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	log.Printf("Status %d. Item %v deleted. ActivityId %s. Consuming %v Request Units.\n", res.RawResponse.StatusCode, pk, res.ActivityID, res.RequestCharge)
+
+// 	return nil
+// }

@@ -1,6 +1,9 @@
 package main
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type Manifest struct {
 	CreatedAt          int64             `json:"createdAt"`
@@ -80,3 +83,49 @@ type ManifestRepo struct {
 	URL     string `json:"url"`
 	Version string `json:"version"`
 }
+
+var (
+	getCmd = app.Command("get", "Get command")
+
+	getManifestCmd = getCmd.Command("manifest", "Get a manifest")
+	// Add flags for 'get manifest'
+	manifestName = getManifestCmd.Flag("manifest-name", "Name of the manifest").Required().String()
+	outputFormat = getManifestCmd.Flag("output", "Output format").Default("yaml").Enum("json", "yaml")
+
+	getManifestsCmd = getCmd.Command("manifests", "Get all manifests")
+	// Add flags for 'get manifests'
+	pageNumber = getManifestsCmd.Flag("page", "Page number for manifest listing").Int()
+	pageSize   = getManifestsCmd.Flag("size", "Size of each page for manifest listing").Int()
+
+	listCmd         = app.Command("list", "List command")
+	listManifestCmd = listCmd.Arg("manifest", "List all manifests").String()
+)
+
+func handleGetCommand(cmd string) {
+	switch cmd {
+	case getManifestCmd.FullCommand():
+		fmt.Printf("Executing 'get manifest' command with name '%s' in '%s' format\n", *manifestName, *outputFormat)
+		// Add your logic here
+	case getManifestsCmd.FullCommand():
+		fmt.Printf("Executing 'get manifests' command with page number '%d' and page size '%d'\n", *pageNumber, *pageSize)
+		// Add your logic here
+	}
+}
+
+func handleListCommand(arg string) {
+	if arg == "manifest" {
+		fmt.Println("Executing 'list manifest' command")
+		// Add your logic here
+	}
+	// Add more cases as needed
+}
+
+// func manifestGet() {
+// 	fmt.Println("Executing 'manifest get' command")
+// 	// Add your logic here
+// }
+
+// func manifestList() {
+// 	fmt.Println("Executing 'manifest list' command")
+// 	// Add your logic here
+// }
