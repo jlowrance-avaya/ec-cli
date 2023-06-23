@@ -96,9 +96,6 @@ var (
 	// Add flags for 'get manifests'
 	pageNumber = getManifestsCmd.Flag("page", "Page number for manifest listing").Int()
 	pageSize   = getManifestsCmd.Flag("size", "Size of each page for manifest listing").Int()
-
-	listCmd         = app.Command("list", "List command")
-	listManifestCmd = listCmd.Arg("manifest", "List all manifests").String()
 )
 
 func handleGetCommand(cmd string) {
@@ -110,14 +107,6 @@ func handleGetCommand(cmd string) {
 		fmt.Printf("Executing 'get manifests' command with page number '%d' and page size '%d'\n", *pageNumber, *pageSize)
 		// Add your logic here
 	}
-}
-
-func handleListCommand(arg string) {
-	if arg == "manifest" {
-		fmt.Println("Executing 'list manifest' command")
-		// Add your logic here
-	}
-	// Add more cases as needed
 }
 
 // func manifestGet() {
