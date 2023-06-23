@@ -89,7 +89,7 @@ var (
 
 	getManifestCmd = getCmd.Command("manifest", "Get a manifest")
 	// Add flags for 'get manifest'
-	manifestName = getManifestCmd.Flag("manifest-name", "Name of the manifest").Required().String()
+	manifestName = getManifestCmd.Flag("name", "Name of the manifest").Required().String()
 	outputFormat = getManifestCmd.Flag("output", "Output format").Default("yaml").Enum("json", "yaml")
 
 	getManifestsCmd = getCmd.Command("manifests", "Get all manifests")
