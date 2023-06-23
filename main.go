@@ -213,14 +213,8 @@ func readItem(client *azcosmos.Client, databaseName string, containerName string
 	}
 
 	itemResponseBody := struct {
-		ID           string `json:"id"`
-		CustomerId   string `json:"customerId"`
-		Title        string
-		FirstName    string
-		LastName     string
-		EmailAddress string
-		PhoneNumber  string
-		CreationDate string
+		ID         string `json:"id"`
+		CustomerId string `json:"customerId"`
 	}{}
 
 	err = json.Unmarshal(itemResponse.Value, &itemResponseBody)

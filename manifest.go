@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"time"
+
+	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
 )
 
 type Manifest struct {
@@ -117,15 +121,23 @@ func handleGetCommand(cmd string) {
 
 		// createDatabaseContainerItem
 
+		// item := struct {
+		// 	ID         string `json:"id"`
+		// 	CustomerId string `json:"customerId"`
+		// }{
+		// 	ID:         "1",
+		// 	CustomerId: "1",
+		// }
+
 		item := struct {
-			ID         string `json:"id"`
-			CustomerId string `json:"customerId"`
+			ID           string `json:"id"`
+			MetaDataUUID string `json:"metadata.uuid"`
 		}{
-			ID:         "1",
-			CustomerId: "1",
+			ID:           "7fd55dcf-ef05-4c99-9b6d-040fd666f018",
+			MetaDataUUID: "52314b92-cecd-4b11-aef8-f0cda6d3bb98",
 		}
 
-		err := readItem(client, *database, *container, item.CustomerId, item.ID)
+		err := readManifest(client, *database, *container, item.MetaDataUUID, item.ID)
 		if err != nil {
 			log.Printf("readItem failed: %s\n", err)
 		}
@@ -134,4 +146,50 @@ func handleGetCommand(cmd string) {
 		fmt.Printf("Executing 'get manifests' command with page number '%d' and page size '%d'. Database: %s, Container: %s\n",
 			*pageNumber, *pageSize, *database, *container)
 	}
+}
+
+func readManifest(client *azcosmos.Client, databaseName string, containerName string, partitionKey string, itemId string) error {
+	//	databaseName = "adventureworks"
+	//	containerName = "customer"
+	//	partitionKey = "1"
+	//	itemId = "1"
+
+	// Create container client
+	containerClient, err := client.NewContainer(databaseName, containerName)
+	if err != nil {
+		return fmt.Errorf("failed to create a container client: %s", err)
+	}
+
+	// Specifies the value of the partiton key
+	pk := azcosmos.NewPartitionKeyString(partitionKey)
+
+	// Read an item
+	ctx := context.TODO()
+	itemResponse, err := containerClient.ReadItem(ctx, pk, itemId, nil)
+	if err != nil {
+		return err
+	}
+
+	itemResponseBody := struct {
+		ID           string `json:"id"`
+		Kind         string `json:"kind"`
+		Version      string `json:"version"`
+		CustomerName string `json:"customer_name"`
+	}{}
+
+	err = json.Unmarshal(itemResponse.Value, &itemResponseBody)
+	if err != nil {
+		return err
+	}
+
+	b, err := json.MarshalIndent(itemResponseBody, "", "    ")
+	if err != nil {
+		return err
+	}
+	// fmt.Printf("Read item with Metadata UUID %s\n", itemResponseBody.Kind)
+	fmt.Printf("%s\n", b)
+
+	// log.Printf("Status %d. Item %v read. ActivityId %s. Consuming %v Request Units.\n", itemResponse.RawResponse.StatusCode, pk, itemResponse.ActivityID, itemResponse.RequestCharge)
+
+	return nil
 }
