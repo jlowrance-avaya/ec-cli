@@ -86,6 +86,9 @@ type ManifestRepo struct {
 
 var (
 	getCmd = app.Command("get", "Get command")
+	// Define global flags
+	databaseName  = app.Flag("database", "Name of the database").Required().String()
+	containerName = app.Flag("container", "Name of the container").Required().String()
 
 	getManifestCmd = getCmd.Command("manifest", "Get a manifest")
 	// Add flags for 'get manifest'
@@ -101,10 +104,12 @@ var (
 func handleGetCommand(cmd string) {
 	switch cmd {
 	case getManifestCmd.FullCommand():
-		fmt.Printf("Executing 'get manifest' command with name '%s' in '%s' format\n", *manifestName, *outputFormat)
+		fmt.Printf("Executing 'get manifest' command with name '%s' format:'%s' format. Database: %s, Container: %s\n",
+			*manifestName, *outputFormat, *databaseName, *containerName)
 		// Add your logic here
 	case getManifestsCmd.FullCommand():
-		fmt.Printf("Executing 'get manifests' command with page number '%d' and page size '%d'\n", *pageNumber, *pageSize)
+		fmt.Printf("Executing 'get manifests' command with page number '%d' and page size '%d'. Database: %s, Container: %s\n",
+			*pageNumber, *pageSize, *databaseName, *containerName)
 		// Add your logic here
 	}
 }
