@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -11,6 +13,9 @@ var (
 )
 
 func main() {
+
+	checkEnvVars([]string{"AZURE_COSMOS_ENDPOINT", "AZURE_COSMOS_KEY"})
+
 	switch cmd := kingpin.MustParse(app.Parse(os.Args[1:])); cmd {
 	case getManifestCmd.FullCommand():
 		handleGetCommand(cmd)
@@ -19,16 +24,21 @@ func main() {
 	}
 }
 
-// func main() {
-// 	endpoint := os.Getenv("AZURE_COSMOS_ENDPOINT")
-// 	if endpoint == "" {
-// 		log.Fatal("AZURE_COSMOS_ENDPOINT could not be found")
-// 	}
+func checkEnvVars(varNames []string) {
+	missingVars := []string{}
+	for _, varName := range varNames {
+		val := os.Getenv(varName)
+		if val == "" {
+			missingVars = append(missingVars, varName)
+		}
+	}
+	if len(missingVars) > 0 {
+		fmt.Printf("Please set the following environment variables:\n%s\n", strings.Join(missingVars, ", "))
+		os.Exit(1)
+	}
+}
 
-// 	key := os.Getenv("AZURE_COSMOS_KEY")
-// 	if key == "" {
-// 		log.Fatal("AZURE_COSMOS_KEY could not be found")
-// 	}
+// func main() {
 
 // 	var databaseName = "jjl-test"
 // 	var containerName = "customer"
