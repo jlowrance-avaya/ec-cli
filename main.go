@@ -14,13 +14,18 @@ var (
 	app = kingpin.New("ec", "enterprise cloud CLI")
 )
 
+type Query struct {
+	Query string `json:"query"`
+}
+
+type CosmosDBResponse struct {
+	Documents []map[string]interface{} `json:"Documents"`
+}
+
 func main() {
 
 	checkEnvVars([]string{"AZURE_COSMOS_ENDPOINT", "AZURE_COSMOS_KEY"})
-	createClient(
-		os.Getenv("AZURE_COSMOS_ENDPOINT"),
-		os.Getenv("AZURE_COSMOS_KEY"),
-	)
+
 	app := kingpin.New("ec", "A command-line app")
 
 	// Set up "get" command

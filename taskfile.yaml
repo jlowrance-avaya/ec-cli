@@ -18,8 +18,8 @@ tasks:
     desc: Run the Go package
     cmds:
       - ./ec get manifests --database ec-provisioner
-      - ./ec get manifestTemplates --database ec-provisioner
-      - ./ec get deployments --database ec-provisioner
+      # - ./ec get manifestTemplates --database ec-provisioner
+      # - ./ec get deployments --database ec-provisioner
 
     deps: [build]
 
