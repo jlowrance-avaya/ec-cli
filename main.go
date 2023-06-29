@@ -79,3 +79,10 @@ func createClient(endpoint string, key string) *azcosmos.Client {
 
 	return client
 }
+
+func handle(err error) {
+	if err != nil {
+		// This will print the error and stop the program.
+		log.Fatal(err)
+	}
+}
