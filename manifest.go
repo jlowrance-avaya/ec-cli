@@ -18,34 +18,13 @@ type Manifest struct {
 	CustomerName string `json:"customer_name"`
 }
 
-type QueryParameter struct {
-	// Name represents the name of the parameter in the parametrized query.
-	Name string `json:"name"`
-	// Value represents the value of the parameter in the parametrized query.
-	Value any `json:"value"`
-}
-
 func getManifests(database string, outputFormat string) {
-	var partitionKey = "/" + database
 
 	fmt.Println("Executing getManifest with the following parameters:")
-	fmt.Printf("---\ndatabase: %s\npartitionKey: %s\noutputFormat: %s\n", database, partitionKey, outputFormat)
-
-	item := struct {
-		ID           string `json:"id"`
-		MetaDataUUID string `json:"metadata.uuid"`
-	}{
-		ID:           "7fd55dcf-ef05-4c99-9b6d-040fd666f018",
-		MetaDataUUID: "4976e8a3-b249-4f68-a40c-369ed4acae8c",
-	}
-
-	// err := readManifest("ec-provisioner", "manifests", item.MetaDataUUID, item.ID)
-	// if err != nil {
-	// 	log.Printf("readItem failed: %s\n", err)
-	// }
+	fmt.Printf("---\ndatabase: %s\noutputFormat: %s\n---\n", database, outputFormat)
 
 	// new function
-	queryResponse, err := queryManifest("ec-provisioner", "manifests", item.MetaDataUUID)
+	queryResponse, err := queryManifest("ec-provisioner", "manifests", "52314b92-cecd-4b11-aef8-f0cda6d3bb98")
 	if err != nil {
 		log.Printf("readItem failed: %s\n", err)
 	}
@@ -120,7 +99,7 @@ func queryManifest(databaseName string, containerName string, partitionKey strin
 
 	// Specifies the value of the partition key
 	pk := azcosmos.NewPartitionKeyString(partitionKey)
-	queryPager := containerClient.NewQueryItemsPager("SELECT * FROM c WHERE c.kind = 'deployment-manifest' AND c.application_account = 'avaya12'", pk, nil)
+	queryPager := containerClient.NewQueryItemsPager("SELECT * FROM c", pk, nil)
 
 	var manifests []Manifest
 	for queryPager.More() {
