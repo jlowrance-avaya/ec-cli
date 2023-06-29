@@ -36,13 +36,13 @@ func getManifests(database string, outputFormat string) {
 		MetaDataUUID string `json:"metadata.uuid"`
 	}{
 		ID:           "7fd55dcf-ef05-4c99-9b6d-040fd666f018",
-		MetaDataUUID: "52314b92-cecd-4b11-aef8-f0cda6d3bb98",
+		MetaDataUUID: "4976e8a3-b249-4f68-a40c-369ed4acae8c",
 	}
 
-	err := readManifest("ec-provisioner", "manifests", item.MetaDataUUID, item.ID)
-	if err != nil {
-		log.Printf("readItem failed: %s\n", err)
-	}
+	// err := readManifest("ec-provisioner", "manifests", item.MetaDataUUID, item.ID)
+	// if err != nil {
+	// 	log.Printf("readItem failed: %s\n", err)
+	// }
 
 	// new function
 	queryResponse, err := queryManifest("ec-provisioner", "manifests", item.MetaDataUUID)
@@ -120,7 +120,7 @@ func queryManifest(databaseName string, containerName string, partitionKey strin
 
 	// Specifies the value of the partition key
 	pk := azcosmos.NewPartitionKeyString(partitionKey)
-	queryPager := containerClient.NewQueryItemsPager("SELECT * FROM c", pk, nil)
+	queryPager := containerClient.NewQueryItemsPager("SELECT * FROM c WHERE c.kind = 'deployment-manifest' AND c.application_account = 'avaya12'", pk, nil)
 
 	var manifests []Manifest
 	for queryPager.More() {
