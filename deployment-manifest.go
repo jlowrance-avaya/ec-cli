@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -18,21 +17,21 @@ type Manifest struct {
 	CustomerName string `json:"customer_name"`
 }
 
-func getManifests(database string, outputFormat string) {
+func getDeploymentManifests(database string, outputFormat string) {
 
 	fmt.Println("Executing getManifest with the following parameters:")
 	fmt.Printf("---\ndatabase: %s\noutputFormat: %s\n---\n", database, outputFormat)
 
 	// new function
-	queryResponse, err := queryManifest("ec-provisioner", "manifests", "52314b92-cecd-4b11-aef8-f0cda6d3bb98")
-	if err != nil {
-		log.Printf("readItem failed: %s\n", err)
-	}
+	// queryResponse, err := queryManifest("ec-provisioner", "manifests", "52314b92-cecd-4b11-aef8-f0cda6d3bb98")
+	// if err != nil {
+	// 	log.Printf("readItem failed: %s\n", err)
+	// }
 
-	fmt.Println(queryResponse)
+	// fmt.Println(queryResponse)
 }
 
-func readManifest(databaseName string, containerName string, partitionKey string, itemId string) error {
+func readDeploymentManifest(databaseName string, containerName string, partitionKey string, itemId string) error {
 
 	client := createClient(
 		os.Getenv("AZURE_COSMOS_ENDPOINT"),
@@ -79,7 +78,7 @@ func readManifest(databaseName string, containerName string, partitionKey string
 	return nil
 }
 
-func queryManifest(databaseName string, containerName string, partitionKey string) ([]Manifest, error) {
+func queryDeploymentManifest(databaseName string, containerName string, partitionKey string) ([]Manifest, error) {
 	client := createClient(
 		os.Getenv("AZURE_COSMOS_ENDPOINT"),
 		os.Getenv("AZURE_COSMOS_KEY"),

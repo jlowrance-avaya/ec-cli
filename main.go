@@ -11,7 +11,16 @@ import (
 )
 
 var (
-	app = kingpin.New("ec", "enterprise cloud CLI")
+	app    = kingpin.New("ec", "Enterprise Cloud CLI")
+	get    = app.Command("get", "Get a resource")
+	edit   = app.Command("edit", "Edit a resource")
+	delete = app.Command("delete", "Delete a resource")
+	create = app.Command("create", "Create a resource")
+
+	getResource    = get.Arg("resource", "Resource to operate on").Enum("deploymentManifest", "deploymentManifestTemplate", "deployment")
+	editResource   = edit.Arg("resource", "Resource to operate on").Enum("deploymentManifest", "deploymentManifestTemplate", "deployment")
+	deleteResource = delete.Arg("resource", "Resource to operate on").Enum("deploymentManifest", "deploymentManifestTemplate", "deployment")
+	createResource = create.Arg("resource", "Resource to operate on").Enum("deploymentManifest", "deploymentManifestTemplate", "deployment")
 )
 
 type Query struct {
@@ -24,29 +33,58 @@ type CosmosDBResponse struct {
 
 func main() {
 
-	checkEnvVars([]string{"AZURE_COSMOS_ENDPOINT", "AZURE_COSMOS_KEY"})
-
-	app := kingpin.New("ec", "A command-line app")
-
-	// Set up "get" command
-	getCommand := app.Command("get", "Get operation")
-	database := getCommand.Flag("database", "Name of the database").Required().String()
-	outputFormat := getCommand.Flag("output", "Output format").Default("yaml").Enum("json", "yaml")
-
-	getCommand.Command("manifests", "Get multiple manifests").Action(func(c *kingpin.ParseContext) error {
-		getManifests(*database, *outputFormat)
-		return nil
+	checkEnvVars([]string{
+		"PROVISIONER_API_ENDPOINT",
+		"PROVISIONER_API_TOKEN",
 	})
 
-	getCommand.Command("manifestTemplates", "Get multiple manifestTemplates").Action(func(c *kingpin.ParseContext) error {
-		getManifestTemplates(*database, *outputFormat)
-		return nil
-	})
+	baseRequestUrl := fmt.Sprintf("https://%s:443/", os.Getenv("PROVISIONER_API_ENDPOINT"))
+	authzHeader := fmt.Sprintf("Authorization: Bearer %s", os.Getenv("PROVISIONER_API_TOKEN"))
 
-	getCommand.Command("deployments", "Get multiple deployments").Action(func(c *kingpin.ParseContext) error {
-		getDeployments(*database, *outputFormat)
-		return nil
-	})
+	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
+	case get.FullCommand():
+		fmt.Printf("Getting %s\n", *getResource)
+	case edit.FullCommand():
+		fmt.Printf("Editing %s\n", *editResource)
+	case delete.FullCommand():
+		fmt.Printf("Deleting %s\n", *deleteResource)
+	case create.FullCommand():
+		fmt.Printf("Creating %s\n", *createResource)
+	}
+
+	// sub-commands
+	// "manifest"
+	// "manifests"
+	// "manifestTemplate"
+	// "manifestTemplates"
+	// "deployment"
+	// "deployments"
+	// "job"
+	// "jobs"
+
+	// flags
+	// outputFormat := getCommand.Flag("output", "Output format").Default("yaml").Enum("json", "yaml")
+
+	// getCommand.Command("subscription", "Get Azure subscription").Action(func(c *kingpin.ParseContext) error {
+	// 	getManifests(baseRequestUrl, *outputFormat)
+	// 	return nil
+	// })
+
+	// getCommand.Command("manifestTemplates", "Get multiple manifestTemplates").Action(func(c *kingpin.ParseContext) error {
+	// 	getManifestTemplates(baseRequestUrl, *outputFormat)
+	// 	return nil
+	// })
+
+	// getCommand.Command("deployments", "Get multiple deployments").Action(func(c *kingpin.ParseContext) error {
+	// 	getDeployments(baseRequestUrl, *outputFormat)
+	// 	return nil
+	// })
+
+	fmt.Println(
+		"---\n",
+		baseRequestUrl+"\n",
+		authzHeader+"\n",
+	)
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 }
@@ -68,13 +106,13 @@ func checkEnvVars(varNames []string) {
 func createClient(endpoint string, key string) *azcosmos.Client {
 	cred, err := azcosmos.NewKeyCredential(key)
 	if err != nil {
-		log.Fatalf("Failed to create a credential: %v", err)
+		handle(err)
 	}
 
 	// Create a CosmosDB client
 	client, err := azcosmos.NewClientWithKey(endpoint, cred, nil)
 	if err != nil {
-		log.Fatalf("Failed to create Azure Cosmos DB client: %v", err)
+		handle(err)
 	}
 
 	return client
