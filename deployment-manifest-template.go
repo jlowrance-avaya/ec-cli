@@ -1,8 +1,19 @@
 package main
 
-// func getDeploymentManifestTemplates(database string, outputFormat string) {
-// 	var partitionKey = "/" + database
+type DeploymentManifestTemplate struct {
+}
 
-// 	fmt.Println("Executing getManifestTemplate with the following parameters:")
-// 	fmt.Printf("---\ndatabase: %s\npartitionKey: %s\noutputFormat: %s\n", database, partitionKey, outputFormat)
-// }
+func getDeploymentManifestTemplate() {
+}
+
+func getDeploymentManifestTemplates() {
+}
+
+func editDeploymentManifestTemplate() {
+}
+
+func deleteDeploymentManifestTemplate() {
+}
+
+func createDeploymentManifestTemplate() {
+}

@@ -2,9 +2,25 @@ package main
 
 import "fmt"
 
-func getDeployments(database string, outputFormat string) {
-	var partitionKey = "/" + database
+type Deployment struct {
+}
 
-	fmt.Println("Executing getDeployment with the following parameters:")
-	fmt.Printf("---\ndatabase: %s\npartitionKey: %s\noutputFormat: %s\n", database, partitionKey, outputFormat)
+func getDeployment(api *API, id string) {
+	fmt.Println("getDeployment...")
+}
+
+func getDeployments(api *API) {
+	fmt.Println("getDeployments...")
+}
+
+func editDeployment(api *API, id string) {
+	fmt.Println("editDeployment...")
+}
+
+func deleteDeployment(api *API, id string) {
+	fmt.Println("deleteDeployment...")
+}
+
+func createDeployment(api *API, id string) {
+	fmt.Println("createDeployment...")
 }
