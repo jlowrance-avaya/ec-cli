@@ -17,8 +17,6 @@ var (
 	create = app.Command("create", "Create a resource")
 
 	objects = []string{
-		"deployment",
-		"deployments",
 		"deploymentManifest",
 		"deploymentManifests",
 		"deploymentManifestTemplate",
@@ -51,17 +49,13 @@ func main() {
 	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
 	case get.FullCommand():
 		switch *getResource {
-		case "deployment":
-			getDeployment(api, "asdf")
 		case "deploymentManifest":
-			getDeploymentManifest()
+			getDeploymentManifest(api, "asdf")
 		case "deploymentManifestTemplate":
 			getDeploymentManifestTemplate()
 
-		case "deployments":
-			getDeployments(api)
 		case "deploymentManifests":
-			getDeploymentManifests()
+			getDeploymentManifests(api)
 		case "deploymentManifestTemplates":
 			getDeploymentManifestTemplates()
 		// you can add more cases here as needed
@@ -71,10 +65,8 @@ func main() {
 
 	case edit.FullCommand():
 		switch *editResource {
-		case "deployment":
-			editDeployment(api, "asdf")
 		case "deploymentManifest":
-			editDeploymentManifest()
+			editDeploymentManifest(api, "asdf")
 		case "deploymentManifestTemplate":
 			editDeploymentManifestTemplate()
 		default:
@@ -83,10 +75,8 @@ func main() {
 
 	case delete.FullCommand():
 		switch *deleteResource {
-		case "deployment":
-			deleteDeployment(api, "asdf")
 		case "deploymentManifest":
-			deleteDeploymentManifest()
+			deleteDeploymentManifest(api, "asdf")
 		case "deploymentManifestTemplate":
 			deleteDeploymentManifestTemplate()
 		default:
@@ -95,10 +85,8 @@ func main() {
 
 	case create.FullCommand():
 		switch *createResource {
-		case "deployment":
-			createDeployment(api, "asdf")
 		case "deploymentManifest":
-			createDeploymentManifest()
+			createDeploymentManifest(api, "asdf")
 		case "deploymentManifestTemplate":
 			createDeploymentManifestTemplate()
 		default:

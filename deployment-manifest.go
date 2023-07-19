@@ -1,19 +1,26 @@
 package main
 
+import "fmt"
+
 type DeploymentManifest struct {
 }
 
-func getDeploymentManifest() {
+func getDeploymentManifest(api *API, id string) {
+	fmt.Println("getDeploymentManifest...")
 }
 
-func getDeploymentManifests() {
+func getDeploymentManifests(api *API) {
+	fmt.Println("getDeploymentManifests...")
 }
 
-func editDeploymentManifest() {
+func editDeploymentManifest(api *API, id string) {
+	fmt.Println("editDeploymentManifest...")
 }
 
-func deleteDeploymentManifest() {
+func deleteDeploymentManifest(api *API, id string) {
+	fmt.Println("deleteDeploymentManifest...")
 }
 
-func createDeploymentManifest() {
+func createDeploymentManifest(api *API, id string) {
+	fmt.Println("createDeploymentManifest...")
 }
