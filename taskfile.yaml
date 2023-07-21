@@ -12,16 +12,16 @@ tasks:
     desc: Build the Go package
     cmds:
       - go mod tidy
-      - go build -o ec 
+      - go build -o ec-cli
         
   run:
     desc: Run the Go package
     cmds:
-      - ./ec get deploymentManifest
-      # - ./ec get deploymentManifests
-      # - ./ec get deploymentManifestTemplate
-      # - ./ec get deploymentManifestTemplates
-      # - ./ec get deployments
+      - ./ec-cli get deploymentManifest
+      # - ./ec-cli get deploymentManifests
+      # - ./ec-cli get deploymentManifestTemplate
+      # - ./ec-cli get deploymentManifestTemplates
+      # - ./ec-cli get deployments
 
     deps: [build]
 
