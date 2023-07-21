@@ -1,4 +1,12 @@
-### dependencies
+## TLDR
 ```
-go get github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos
+docker image build -t ec .
+```
+
+```
+docker run -it \
+-p 8080:8080 \
+-e PROVISIONER_API_ENDPOINT='localhost' \
+-e PROVISIONER_API_TOKEN='token' \
+ec get deploymentManifest
 ```
