@@ -2,8 +2,6 @@ module ec-cli
 
 go 1.20
 
-replace github.com/alecthomas/kingpin => github.com/alecthomas/kingpin v2.2.6+incompatible
-
 require github.com/alecthomas/kingpin v2.2.6+incompatible
 
 require (
