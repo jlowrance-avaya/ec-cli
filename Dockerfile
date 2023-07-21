@@ -21,7 +21,7 @@ COPY . .
 RUN go build -o main .
 
 # Second stage: SCRATCH image for smaller final image
-FROM SCRATCH
+FROM scratch
 
 # Copy the output from our builder stage
 COPY --from=builder /build/main /app/
