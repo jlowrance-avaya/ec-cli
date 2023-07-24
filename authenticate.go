@@ -79,7 +79,7 @@ func createCredsFile(username string, password string, apiEndpoint string) error
 
 	fmt.Println("\ncredentials stored in ~/.ec-cli/creds")
 
-	_, err = fmt.Fprintf(file, "username: \"%s\"\npassword: \"%s\"\napiEndpoint: \"%s\"\n", username, password, apiEndpoint)
+	_, err = fmt.Fprintf(file, "username: \"%s\"\npassword: \"%s\"\napiEndpoint: \"%s\"\napiBearerToken: \"\"\n", username, password, apiEndpoint)
 	return err
 }
 
@@ -175,7 +175,7 @@ func authenticate(ProvisionerApiEndpoint string) error {
 	return nil
 }
 
-func newAuth() (string, error) {
+func getBearerToken() (string, error) {
 	url := "https://provisioner-api.shsrv-nonprod.private.ec.avayacloud.com/bearer_token/"
 	payload := map[string]string{
 		"username": "testuser1",
@@ -231,5 +231,37 @@ func newAuth() (string, error) {
 		return "", fmt.Errorf("error unmarshaling JSON response: %s", err)
 	}
 
+	// Update the creds file with the new access token
+	err = updateCredsFile(result.AccessToken)
+	if err != nil {
+		return "", err
+	}
+
 	return result.AccessToken, nil
+}
+
+func updateCredsFile(token string) error {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("error getting home directory: %s", err)
+	}
+
+	credsFile := homeDir + "/.ec-cli/creds"
+
+	// Read the creds file
+	content, err := ioutil.ReadFile(credsFile)
+	if err != nil {
+		return fmt.Errorf("error reading creds file: %s", err)
+	}
+
+	// Update the apiBearerToken value
+	newContent := strings.ReplaceAll(string(content), "apiBearerToken: \"\"", "apiBearerToken: \""+token+"\"")
+
+	// Write the updated content back to the file
+	err = ioutil.WriteFile(credsFile, []byte(newContent), 0644)
+	if err != nil {
+		return fmt.Errorf("error writing to creds file: %s", err)
+	}
+
+	return nil
 }

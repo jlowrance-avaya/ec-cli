@@ -76,7 +76,7 @@ func main() {
 		// case "deploymentManifest":
 		// 	getDeploymentManifest(apiCredentials, "asdf")
 		case "deploymentManifests":
-			bearerToken, err := newAuth()
+			bearerToken, err := getBearerToken()
 			if err != nil {
 				fmt.Println("Error:", err)
 				return
