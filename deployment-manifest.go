@@ -38,6 +38,7 @@ func getDeploymentManifest(api *API, id string) {
 		// based on the id. For simplicity, we'll just return a static string.
 
 		fmt.Fprintf(w, "You requested deployment manifest: %s", id)
+
 	})
 
 	http.ListenAndServe(fmt.Sprintf("%s:8080", api.Endpoint), nil)
