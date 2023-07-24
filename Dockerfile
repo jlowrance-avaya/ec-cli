@@ -1,5 +1,5 @@
 # First stage: Build stage
-FROM golang:1.16 as builder
+FROM golang:1.20 as builder
 
 # Set necessary environmet variables needed for our image
 ENV GO111MODULE=on \
@@ -9,6 +9,10 @@ ENV GO111MODULE=on \
 
 # Move to working directory /build
 WORKDIR /build
+
+RUN apt-get update && apt-get install -y \
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy and download dependencies using go mod
 COPY go.mod go.sum ./
@@ -20,8 +24,8 @@ COPY . .
 # Build the application
 RUN go build -o main .
 
-# Second stage: SCRATCH image for smaller final image
-FROM scratch
+# Second stage: SCRATCH image for smaller final image (alpine required for /bin/sh)
+FROM alpine
 
 # Copy the output from our builder stage
 COPY --from=builder /build/main /app/

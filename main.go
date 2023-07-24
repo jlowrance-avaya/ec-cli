@@ -11,9 +11,10 @@ import (
 var (
 	app = kingpin.New("ec", "Enterprise Cloud CLI")
 
-	loginCommand = app.Command("login", "Login to the application.")
-	usernameFlag = loginCommand.Flag("username", "Username for login").String()
-	passwordFlag = loginCommand.Flag("password", "Password for login (usage of this flag is not recommended).").String()
+	loginCommand    = app.Command("login", "Login to the application.")
+	usernameFlag    = loginCommand.Flag("username", "Username for login").String()
+	passwordFlag    = loginCommand.Flag("password", "Password for login (usage of this flag is not recommended)").String()
+	apiEndpointFlag = loginCommand.Flag("endpoint", "API Endpoint to use").Default("provisioner-api.shsrv-nonprod.private.ec.avayacloud.com").String()
 
 	get    = app.Command("get", "Get a resource")
 	edit   = app.Command("edit", "Edit a resource")
@@ -40,8 +41,6 @@ type API struct {
 
 func main() {
 
-	apiEndpoint := GetEnvWithDefault("PROVISIONER_API_ENDPOINT", "provisioner-api.shsrv-nonprod.private.ec.avayacloud.com")
-
 	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
 	case loginCommand.FullCommand():
 		username := *usernameFlag
@@ -64,30 +63,26 @@ func main() {
 			}
 		}
 
-		err := createCredsFile(username, password)
+		err := createCredsFile(username, password, *apiEndpointFlag)
 		if err != nil {
 			fmt.Println("Error creating creds file:", err)
 		}
 
-		apiEndpoint := GetEnvWithDefault("PROVISIONER_API_ENDPOINT", "provisioner-api.shsrv-nonprod.private.ec.avayacloud.com")
-		authenticate(apiEndpoint)
-		// fmt.Printf("endpoint: %s\n", os.Getenv("PROVISIONER_API_ENDPOINT"))
-		// fmt.Printf("access token: %s\n", os.Getenv("PROVISIONER_API_ACCESS_TOKEN"))
-
-		// authenticate(username, password) // sets environment variables
-
-		// apiCredentials := &API{
-		// 	Endpoint: os.Getenv("PROVISIONER_API_ENDPOINT"),
-		// 	Token:    os.Getenv("PROVISIONER_API_ACCESS_TOKEN"),
-		// }
+		// token, _ := getAccessToken()
+		// fmt.Println(token)
 
 	case get.FullCommand():
 		switch *getResource {
 		// case "deploymentManifest":
 		// 	getDeploymentManifest(apiCredentials, "asdf")
 		case "deploymentManifests":
-			authenticate(apiEndpoint)
-			// getDeploymentManifests(apiCredentials)
+			bearerToken, err := newAuth()
+			if err != nil {
+				fmt.Println("Error:", err)
+				return
+			}
+
+			fmt.Println("Bearer Token:", bearerToken)
 
 		case "deploymentManifestTemplate":
 			getDeploymentManifestTemplate()

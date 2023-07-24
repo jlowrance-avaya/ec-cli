@@ -12,8 +12,21 @@ tasks:
     desc: Build the Go package
     cmds:
       - go mod tidy
+      - go mod download
       - go build -o ec-cli
-        
+
+  docker-build:
+    desc: Build the docker image
+    cmds:
+      - read -p "You must disable zscaler internet security. Press Enter to continue."
+      - echo "az acr login --name acraocpshsrvnonprod"
+      - read -p "run the command above. Press Enter to continue."
+      - go mod tidy
+      - docker image build -t acraocpshsrvnonprod.azurecr.io/ec-cli .
+      # - docker image build --no-cache -t acraocpshsrvnonprod.azurecr.io/ec-cli .
+      # - az acr login --name acraocpshsrvnonprod
+      - docker push acraocpshsrvnonprod.azurecr.io/ec-cli
+
   run:
     desc: Run the Go package
     cmds:

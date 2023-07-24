@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -21,8 +23,11 @@ type Credentials struct {
 	ProvisionerAPIAccessToken string `json:"provisioner_api_access_token"`
 }
 
-type TokenResponse struct {
+type BearerTokenResponse struct {
+	Scope       string `json:"scope"`
 	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+	ExpiresIn   int    `json:"expires_in"`
 }
 
 func GetEnvWithDefault(key, defaultValue string) string {
@@ -53,7 +58,7 @@ func readPassword(prompt string) (string, error) {
 	return strings.TrimSpace(string(bytePassword)), nil
 }
 
-func createCredsFile(username string, password string) error {
+func createCredsFile(username string, password string, apiEndpoint string) error {
 	usr, err := user.Current()
 	if err != nil {
 		return err
@@ -74,12 +79,14 @@ func createCredsFile(username string, password string) error {
 
 	fmt.Println("\ncredentials stored in ~/.ec-cli/creds")
 
-	_, err = fmt.Fprintf(file, "username: \"%s\"\npassword: \"%s\"\n", username, password)
+	_, err = fmt.Fprintf(file, "username: \"%s\"\npassword: \"%s\"\napiEndpoint: \"%s\"\n", username, password, apiEndpoint)
 	return err
 }
 
-func getAccessToken(apiEndpoint string) (TokenResponse, error) {
-	var tokenResp TokenResponse
+func getAccessToken() (BearerTokenResponse, error) {
+	fmt.Println("Fetching access token...")
+
+	var tokenResp BearerTokenResponse
 
 	usr, err := user.Current()
 	if err != nil {
@@ -99,11 +106,16 @@ func getAccessToken(apiEndpoint string) (TokenResponse, error) {
 		return tokenResp, err
 	}
 
+	// Extracting the apiEndpoint value from the credentials
+	apiEndpoint := "provisioner-api.shsrv-nonprod.private.ec.avayacloud.com" // creds.ProvisionerAPIEndpoint
 	jsonData, err := json.Marshal(creds)
 	if err != nil {
 		return tokenResp, err
 	}
 
+	// fmt.Println(data)
+	// fmt.Println(jsonData)
+	// fmt.Println(apiEndpoint)
 	apiEndpointAuthzUri := fmt.Sprintf("//%s/bearer_token/", apiEndpoint)
 
 	resp, err := http.Post(apiEndpointAuthzUri, "application/json", strings.NewReader(string(jsonData)))
@@ -117,7 +129,7 @@ func getAccessToken(apiEndpoint string) (TokenResponse, error) {
 		return tokenResp, err
 	}
 
-	return tokenResp, nil
+	return tokenResp, err
 }
 
 func authenticate(ProvisionerApiEndpoint string) error {
@@ -139,7 +151,7 @@ func authenticate(ProvisionerApiEndpoint string) error {
 		return err
 	}
 
-	tokenResp, err := getAccessToken(ProvisionerApiEndpoint)
+	tokenResp, err := getAccessToken()
 	if err != nil {
 		return err
 	}
@@ -163,73 +175,61 @@ func authenticate(ProvisionerApiEndpoint string) error {
 	return nil
 }
 
-func oldAuthenticate() error {
-	usr, err := user.Current()
-	if err != nil {
-		return err
+func newAuth() (string, error) {
+	url := "https://provisioner-api.shsrv-nonprod.private.ec.avayacloud.com/bearer_token/"
+	payload := map[string]string{
+		"username": "testuser1",
+		"password": "testpassword",
 	}
 
-	credsFile := filepath.Join(usr.HomeDir, ".ec-cli", "creds")
-
-	data, err := ioutil.ReadFile(credsFile)
+	// Convert payload to JSON
+	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
-		return err
+		return "", fmt.Errorf("error marshaling JSON: %s", err)
 	}
 
-	creds := Credentials{}
-	err = json.Unmarshal(data, &creds)
-	if err != nil {
-		return err
+	// Disable SSL certificate verification (equivalent to --insecure in cURL)
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 
-	jsonData, err := json.Marshal(creds)
+	// Create a new HTTP client with the custom transport
+	client := &http.Client{Transport: tr}
+
+	// Create a new HTTP POST request
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
 	if err != nil {
-		return err
+		return "", fmt.Errorf("error creating request: %s", err)
 	}
 
-	apiEndpoint := GetEnvWithDefault("PROVISIONER_API_ENDPOINT", "provisioner-api.shsrv-nonprod.private.ec.avayacloud.com")
-	apiEndpointAuthzUri := fmt.Sprintf("//%s/bearer_token/", apiEndpoint)
+	// Set request headers
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := http.Post(apiEndpointAuthzUri,
-		"application/json", strings.NewReader(string(jsonData)))
+	// Send the request
+	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return "", fmt.Errorf("error sending request: %s", err)
 	}
 	defer resp.Body.Close()
 
-	tokenResp := TokenResponse{}
-	err = json.NewDecoder(resp.Body).Decode(&tokenResp)
+	// Read the response body
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return "", fmt.Errorf("error reading response body: %s", err)
 	}
 
-	creds.ProvisionerAPIEndpoint = apiEndpoint
-	creds.ProvisionerAPIAccessToken = tokenResp.AccessToken
-
-	err = os.Setenv("PROVISIONER_API_ENDPOINT", apiEndpoint)
-	if err != nil {
-		fmt.Println("Error setting environment variable:", err)
+	// Check the HTTP status code
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("unexpected status code: %d - %s", resp.StatusCode, string(body))
 	}
 
-	err = os.Setenv("PROVISIONER_API_ACCESS_TOKEN", tokenResp.AccessToken)
+	// Parse the JSON response
+	var result BearerTokenResponse
+	err = json.Unmarshal(body, &result)
 	if err != nil {
-		fmt.Println("Error setting environment variable:", err)
+		return "", fmt.Errorf("error unmarshaling JSON response: %s", err)
 	}
 
-	if err != nil {
-	} else {
-		fmt.Println("Set PROVISIONER_API_ENDPOINT to", apiEndpoint)
-	}
-
-	updatedCreds, err := json.MarshalIndent(creds, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(credsFile, updatedCreds, 0600)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return result.AccessToken, nil
 }
