@@ -1,15 +1,34 @@
 ## TLDR
 ```
-docker image build -t acraocpshsrvnonprod.azurecr.io/ec-cli:v1.0.0 .
+podman image build -t acraocpshsrvnonprod.azurecr.io/ec-cli:v1.0.0 .
 ```
 
 ```
-docker run -it \
+podman run -it \
 -p 8080:8080 \
--e PROVISIONER_API_ENDPOINT='10.71.2.5' \
--e PROVISIONER_API_TOKEN='token' \
 acraocpshsrvnonprod.azurecr.io/ec-cli:v1.0.0 get deploymentManifest
 ```
+
+## Podman instructions
+
+### build image with podman
+```
+podman image build -t acraocpshsrvnonprod.azurecr.io/ec-cli:v1.0.0 .
+```
+
+### run this command and copy the access token
+```
+az acr login --name acraocpshsrvnonprod --expose-token
+```
+
+### push the image using the `--creds` flag and paste the access token you had copied
+```
+podman push --creds=00000000-0000-0000-0000-000000000000:"<access token>" acraocpshsrvnonprod.azurecr.io/ec-cli:v1.0.0
+```
+
+## Docker instructions
+
+### WARNING: we are not supposed to be using docker.
 
 ### push to ACR with docker 
 ```
