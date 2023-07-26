@@ -45,6 +45,8 @@ docker image pull acraocpshsrvnonprod.azurecr.io/ec-cli
 
 ### run container in interactive mode
 ```
+docker stop /ec-cli
+
 docker run \
     -it --rm \
     -p 8080:8080 \
@@ -55,9 +57,10 @@ docker run \
 
 ### test CLI interactively from container
 ```
-/app/main login --username testuser1 --password testpassword 
-cat ~/.ec-cli/creds
-/app/main get deploymentManifests 
+/app/ec-cli login --username testuser1 --password testpassword
+
+/app/ec-cli get deploymentManifests 
+/app/ec-cli get deploymentManifestTemplates
 ```
 
 ## troubleshooting

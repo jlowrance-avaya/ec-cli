@@ -22,13 +22,13 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN go build -o main .
+RUN go build -o ec-cli .
 
 # Second stage: SCRATCH image for smaller final image (alpine required for /bin/sh)
 FROM alpine
 
 # Copy the output from our builder stage
-COPY --from=builder /build/main /app/
+COPY --from=builder /build/ec-cli /app/
 
 # Command to run
-ENTRYPOINT ["/app/main"]
+ENTRYPOINT ["/app/ec-cli"]
