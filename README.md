@@ -45,8 +45,6 @@ docker image pull acraocpshsrvnonprod.azurecr.io/ec-cli
 
 ### run container in interactive mode
 ```
-docker stop /ec-cli
-
 docker run \
     -it --rm \
     -p 8080:8080 \

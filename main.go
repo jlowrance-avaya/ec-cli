@@ -1,8 +1,11 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/alecthomas/kingpin"
@@ -79,12 +82,13 @@ func main() {
 		// case "deploymentManifest":
 		// 	getDeploymentManifest(apiCredentials, "asdf")
 		case "deploymentManifests":
-			getDeploymentManifests()
+			getObjects("deployment_manifest")
+			// getDeploymentManifests()
 		case "deploymentManifestTemplate":
 			getDeploymentManifestTemplate()
 		case "deploymentManifestTemplates":
-			getDeploymentManifestTemplates()
-		// you can add more cases here as needed
+			getObjects("deployment_template")
+			// getDeploymentManifestTemplates()
 		default:
 			fmt.Println("Invalid resource")
 		}
@@ -145,4 +149,32 @@ func handle(err error) {
 		// This will print the error and stop the program.
 		log.Fatal(err)
 	}
+}
+
+func getObjects(objectType string) {
+	apiEndpoint, apiBearerToken := getCreds()
+
+	url := fmt.Sprintf("https://%s/api/%s/all?Page%%20Number=1&Size=10", apiEndpoint, objectType)
+	req, _ := http.NewRequest("GET", url, nil)
+
+	req.Header.Add("accept", "application/json")
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", apiBearerToken))
+
+	// Create a transport to skip SSL verification
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	client := &http.Client{Transport: tr}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Failed to make the request: %v\n", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	fmt.Println(string(body))
 }
