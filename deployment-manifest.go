@@ -1,61 +1,57 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
+	"io/ioutil"
 	"net/http"
-	"strings"
 )
 
 type DeploymentManifest struct {
 }
 
-func getDeploymentManifest(api *API, id string) {
-	http.HandleFunc("/api/deployment_manifest/", func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
-			http.Error(w, "Authorization header required", http.StatusUnauthorized)
-			return
-		}
-
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			http.Error(w, "Invalid Authorization header", http.StatusUnauthorized)
-			return
-		}
-
-		token := parts[1]
-
-		// Here you would validate the token to make sure it's valid. For simplicity,
-		// we'll just check that it's a specific value.
-		if token != api.Token {
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
-			return
-		}
-
-		id := r.URL.Path[len("/api/deployment_manifest/"):]
-
-		// Here you would typically fetch the deployment manifest from your data store
-		// based on the id. For simplicity, we'll just return a static string.
-
-		fmt.Fprintf(w, "You requested deployment manifest: %s", id)
-
-	})
-
-	http.ListenAndServe(fmt.Sprintf("%s:8080", api.Endpoint), nil)
+func getDeploymentManifest() {
 }
 
-func getDeploymentManifests(api *API) {
-	fmt.Println("getDeploymentManifests...")
+func getDeploymentManifests() {
+	apiEndpoint, apiBearerToken := getCreds()
+	fmt.Printf("API Endpoint: %s\n", apiEndpoint)
+	fmt.Printf("API Bearer Token: %s\n", apiBearerToken)
+
+	url := fmt.Sprintf("https://%s/api/deployment_manifest/all?Page%%20Number=1&Size=10", apiEndpoint)
+
+	req, _ := http.NewRequest("GET", url, nil)
+
+	req.Header.Add("accept", "application/json")
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", apiBearerToken))
+
+	// Create a transport to skip SSL verification
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	client := &http.Client{Transport: tr}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Failed to make the request: %v\n", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	fmt.Println(string(body))
 }
 
-func editDeploymentManifest(api *API, id string) {
+func editDeploymentManifest() {
 	fmt.Println("editDeploymentManifest...")
 }
 
-func deleteDeploymentManifest(api *API, id string) {
+func deleteDeploymentManifest() {
 	fmt.Println("deleteDeploymentManifest...")
 }
 
-func createDeploymentManifest(api *API, id string) {
+func createDeploymentManifest() {
 	fmt.Println("createDeploymentManifest...")
 }

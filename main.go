@@ -68,22 +68,18 @@ func main() {
 			fmt.Println("Error creating creds file:", err)
 		}
 
-		// token, _ := getAccessToken()
-		// fmt.Println(token)
+		_, err = getBearerToken()
+		if err != nil {
+			fmt.Println("Unable to get Bearer token:", err)
+			return
+		}
 
 	case get.FullCommand():
 		switch *getResource {
 		// case "deploymentManifest":
 		// 	getDeploymentManifest(apiCredentials, "asdf")
 		case "deploymentManifests":
-			bearerToken, err := getBearerToken()
-			if err != nil {
-				fmt.Println("Error:", err)
-				return
-			}
-
-			fmt.Println("Bearer Token:", bearerToken)
-
+			getDeploymentManifests()
 		case "deploymentManifestTemplate":
 			getDeploymentManifestTemplate()
 		case "deploymentManifestTemplates":

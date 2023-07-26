@@ -40,7 +40,24 @@ docker push acraocpshsrvnonprod.azurecr.io/ec-cli:v1.0.0
 ### pull image from server
 ```
 az acr login --name acraocpshsrvnonprod
-docker image pull acraocpshsrvnonprod.azurecr.io/ec-cli:v1.0.0
+docker image pull acraocpshsrvnonprod.azurecr.io/ec-cli
+```
+
+### run container in interactive mode
+```
+docker run \
+    -it --rm \
+    -p 8080:8080 \
+    --name ec-cli \
+    --entrypoint /bin/sh \
+    acraocpshsrvnonprod.azurecr.io/ec-cli
+```
+
+### test CLI interactively from container
+```
+/app/main login --username testuser1 --password testpassword 
+cat ~/.ec-cli/creds
+/app/main get deploymentManifests 
 ```
 
 ## troubleshooting

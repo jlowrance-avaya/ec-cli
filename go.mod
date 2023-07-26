@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/alecthomas/kingpin v2.2.6+incompatible
 	golang.org/x/crypto v0.11.0
+	gopkg.in/yaml.v2 v2.2.2
 )
 
 require (

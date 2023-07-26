@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"os/user"
@@ -14,13 +15,14 @@ import (
 	"syscall"
 
 	"golang.org/x/crypto/ssh/terminal"
+	"gopkg.in/yaml.v2"
 )
 
 type Credentials struct {
-	Username                  string `json:"username"`
-	Password                  string `json:"password"`
-	ProvisionerAPIEndpoint    string `json:"provisioner_api_endpoint"`
-	ProvisionerAPIAccessToken string `json:"provisioner_api_access_token"`
+	Username                  string `yaml:"username"`
+	Password                  string `yaml:"password"`
+	ProvisionerAPIEndpoint    string `yaml:"apiEndpoint"`
+	ProvisionerAPIBearerToken string `yaml:"apiBearerToken"`
 }
 
 type BearerTokenResponse struct {
@@ -157,10 +159,10 @@ func authenticate(ProvisionerApiEndpoint string) error {
 	}
 
 	creds.ProvisionerAPIEndpoint = "provisioner-api.shsrv-nonprod.private.ec.avayacloud.com"
-	creds.ProvisionerAPIAccessToken = tokenResp.AccessToken
+	creds.ProvisionerAPIBearerToken = tokenResp.AccessToken
 
 	fmt.Printf(creds.ProvisionerAPIEndpoint)
-	fmt.Printf(creds.ProvisionerAPIAccessToken)
+	fmt.Printf(creds.ProvisionerAPIBearerToken)
 
 	jsonCreds, err := json.MarshalIndent(creds, "", "  ")
 	if err != nil {
@@ -176,7 +178,7 @@ func authenticate(ProvisionerApiEndpoint string) error {
 }
 
 func getBearerToken() (string, error) {
-	url := "https://provisioner-api.shsrv-nonprod.private.ec.avayacloud.com/bearer_token/"
+	url := fmt.Sprintf("https://%s/bearer_token/", *apiEndpointFlag)
 	payload := map[string]string{
 		"username": "testuser1",
 		"password": "testpassword",
@@ -264,4 +266,25 @@ func updateCredsFile(token string) error {
 	}
 
 	return nil
+}
+
+func getCreds() (apiEndpoint string, apiBearerToken string) {
+	// Replace with the actual path to your file
+	filePath := os.Getenv("HOME") + "/.ec-cli/creds"
+
+	// Read the file
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		log.Fatalf("failed reading data from file: %s", err)
+	}
+
+	// Parse the YAML data
+	var creds Credentials
+	err = yaml.Unmarshal(data, &creds)
+	if err != nil {
+		log.Fatalf("error occurred during unmarshalling. %s", err)
+	}
+
+	apiEndpoint, apiBearerToken = creds.ProvisionerAPIEndpoint, creds.ProvisionerAPIBearerToken
+	return
 }
