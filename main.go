@@ -79,46 +79,38 @@ func main() {
 
 	case get.FullCommand():
 		switch *getResource {
-		// case "deploymentManifest":
-		// 	getDeploymentManifest(apiCredentials, "asdf")
 		case "deploymentManifests":
 			getObjects("deployment_manifest")
-			// getDeploymentManifests()
-		case "deploymentManifestTemplate":
-			getDeploymentManifestTemplate()
 		case "deploymentManifestTemplates":
 			getObjects("deployment_template")
-			// getDeploymentManifestTemplates()
+		case "deploymentManifest":
+			// getObject("deployment_manifest")
+		case "deploymentManifestTemplate":
+			// getObject("deployment_template")
 		default:
 			fmt.Println("Invalid resource")
 		}
 
 	case edit.FullCommand():
 		switch *editResource {
-		case "deploymentManifest":
-			// editDeploymentManifest(apiCredentials, "asdf")
 		case "deploymentManifestTemplate":
-			editDeploymentManifestTemplate()
+			// editObject("deployment_template")
 		default:
 			fmt.Println("Invalid resource")
 		}
 
 	case delete.FullCommand():
 		switch *deleteResource {
-		case "deploymentManifest":
-			// deleteDeploymentManifest(apiCredentials, "asdf")
 		case "deploymentManifestTemplate":
-			deleteDeploymentManifestTemplate()
+			// deleteObject("deployment_template")
 		default:
 			fmt.Println("Invalid resource")
 		}
 
 	case create.FullCommand():
 		switch *createResource {
-		case "deploymentManifest":
-			// createDeploymentManifest(apiCredentials, "asdf")
 		case "deploymentManifestTemplate":
-			createDeploymentManifestTemplate()
+			// createObject("deployment_template")
 		default:
 			fmt.Println("Invalid resource")
 		}
@@ -130,23 +122,8 @@ func main() {
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 }
 
-// func checkEnvVars(varNames []string) {
-// 	missingVars := []string{}
-// 	for _, varName := range varNames {
-// 		val := os.Getenv(varName)
-// 		if val == "" {
-// 			missingVars = append(missingVars, varName)
-// 		}
-// 	}
-// 	if len(missingVars) > 0 {
-// 		fmt.Printf("Please set the following environment variables:\n%s\n", strings.Join(missingVars, ", "))
-// 		os.Exit(1)
-// 	}
-// }
-
 func handle(err error) {
 	if err != nil {
-		// This will print the error and stop the program.
 		log.Fatal(err)
 	}
 }
